@@ -1,0 +1,5 @@
+title 0.6: Create a New Note in the SPA version
+
+note over Browser: an event handle creates a new note, adds it to the notes list and rerenders the notes list on the page.
+Browser -> Server: HTTP POST https://studies.cs.helsinki.fi/exampleapp/new_note_spa contains the content and date of the new note in JSON format {"content":"nah, this is the final one.","date":"2022-09-08T09:35:20.810Z"}
+Server -> Browser: {"message":"note created"}
