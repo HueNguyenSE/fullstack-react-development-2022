@@ -1,10 +1,43 @@
 import { useState, setState, useEffect } from 'react';
 import personServices from './services/person';
 
+const SuccessNotification = ({ message }) => {
+	const successStyle = {
+		border: '2px solid green',
+		padding: '5px',
+		backgroundColor: 'lightgray',
+		color: 'green',
+		borderRadius: '2px',
+		fontSize: '20px',
+	};
+	if (message === null) {
+		return null;
+	}
+	return <div style={successStyle}>{message}</div>;
+};
+
+const ErrorNotification = ({ message }) => {
+	const errorStyle = {
+		border: '2px solid red',
+		padding: '5px',
+		backgroundColor: 'lightgray',
+		color: 'red',
+		fontSize: '20px',
+		borderRadius: '2px',
+	};
+
+	if (message === null) {
+		return null;
+	}
+	return <div style={errorStyle}>{message}</div>;
+}
+
 function App() {
 	const [persons, setPersons] = useState([]);
 	const [newName, setNewName] = useState('');
 	const [newNumber, setNewNumber] = useState();
+	const [successMessage, setSuccessMessage] = useState(null);
+	const [errorMessage, setErrorMessage] = useState(null)
 
 	//fetch the data from the database
 	useEffect(() => {
@@ -45,39 +78,55 @@ function App() {
 	//add new person with their contact number and save to server
 	const addNewPerson = (event) => {
 		event.preventDefault();
-		for (let person of persons) {
-			//check if the name is already existing
-			if (person.name.toLowerCase() === newName.toLowerCase()) {
-				//yes, then prompt a confirm message
-				if (
-					window.confirm(
-						`${newName} is already added to phonebook, replace the old number with a new number?`
-					) === true
-				) {
-					//if the user agreed to replace, then update the new number to the existing name
-					personServices.update(person.id, newNumber).then((returnedPerson) => {
+		//check if the name is already existing
+		const isExist = persons.some(
+			(person) => person.name.toLowerCase() === newName.toLowerCase()
+		);
+		//find the existing contact
+		const existedContact = persons.find(
+			(person) => person.name.toLowerCase() === newName.toLowerCase()
+		);
+		if (isExist) {
+			//yes, then prompt a confirm message
+			if (
+				window.confirm(
+					`${newName} is already added to phonebook, replace the old number with a new number?`
+				) === true
+			) {
+				//if the user agreed to replace, then update the new number to the existing name
+				personServices
+					.update(existedContact.id, newNumber)
+					.then((returnedPerson) => {
 						setPersons(
 							persons.map((p) =>
 								p.id !== returnedPerson.id ? p : { ...p, number: newNumber }
 							)
 						);
 					});
-					console.log('persons after update: ', persons);
-				}
-			} else {
-				//else, add the new person and their number to database
-				const personObj = {
-					name: newName,
-					number: newNumber,
-				};
-				personServices.add(personObj).then((returnedPerson) => {
-					setPersons(persons.concat(returnedPerson));
-				});
+				//show the success message which will disappear after 5s
+				setSuccessMessage(`Phone number updated for ${newName}`);
+				setTimeout(() => {
+					setSuccessMessage(null);
+				}, 5000);
 			}
-			//finally, reset the input boxes
-			setNewName('');
-			setNewNumber('');
+		} else {
+			//else, add the new person and their number to database
+			const personObj = {
+				name: newName,
+				number: newNumber,
+			};
+			personServices.add(personObj).then((returnedPerson) => {
+				setPersons(persons.concat(returnedPerson));
+			});
+			//show the success message which will disappear after 5s
+			setSuccessMessage(`Added ${newName}`);
+			setTimeout(() => {
+				setSuccessMessage(null);
+			}, 5000);
 		}
+		//finally, reset the input boxes
+		setNewName('');
+		setNewNumber('');
 	};
 
 	//delete a contact
@@ -89,15 +138,21 @@ function App() {
 				.del(person.id)
 				.then((returnedPerson) => {
 					setPersons(persons.filter((p) => p.id !== returnedPerson.id));
+					setSuccessMessage(`Contact for ${person.name} deleted`)
+					setTimeout(() => setSuccessMessage(null), 5000);
 				})
-				.catch((err) => window.alert('Failed to delete: ', err.message));
-			console.log('deleted', persons);
+				.catch((error) => {
+					setErrorMessage(`Information of ${person.name} has already been removed from server`);
+					setTimeout(() => setErrorMessage(null), 5000)
+				});
 		}
 	};
 
 	return (
 		<div>
 			<h1>Phonebook</h1>
+			<SuccessNotification message={successMessage} />
+			<ErrorNotification message={errorMessage} />
 			<p>
 				Filter shown with{' '}
 				<input id='filter' type='text' onKeyUp={handleSearch} />
