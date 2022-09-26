@@ -1,8 +1,15 @@
-const { application } = require('express');
 const express = require('express');
+const morgan = require('morgan');
 const app = express();
 
 app.use(express.json());
+
+morgan.token('body', function (req) {
+	return (JSON.stringify(req.body));
+  })
+app.use(
+	morgan(':method :url :status :res[content-length] - :response-time ms :body')
+);
 
 let persons = [
 	{
@@ -57,7 +64,7 @@ app.get('/api/persons/:id', (request, response) => {
 app.delete('/api/persons/:id', (request, response) => {
 	const id = Number(request.params.id);
 	persons = persons.filter((persons) => persons.id !== id);
-	console.log(persons);
+	//console.log(persons);
 
 	response.status(204).end();
 });
@@ -70,21 +77,21 @@ const generateID = () => {
 
 app.post('/api/persons', (request, response) => {
 	const body = request.body;
-	console.log(body);
+//	console.log(body);
 
 	//prevent posting data if the name is missing
 	if (!body.name) {
-		return response.status(400).json({ error: "name missing" });
+		return response.status(400).json({ error: 'name missing' });
 	}
 
 	//prevent posting data if the number is missing.
 	if (!body.number) {
-		return response.status(400).json({ error: "number missing" });
+		return response.status(400).json({ error: 'number missing' });
 	}
 
-	const isExist = persons.some(persons => persons.name === body.name);
+	const isExist = persons.some((persons) => persons.name === body.name);
 	if (isExist) {
-		return response.status(400).json({ error: "name must be unique" });
+		return response.status(400).json({ error: 'name must be unique' });
 	}
 
 	const person = {
@@ -98,6 +105,5 @@ app.post('/api/persons', (request, response) => {
 });
 
 const PORT = 3001;
-app.listen(PORT, () => {
-	console.log('listening on port ' + PORT);
-});
+app.listen(PORT);
+console.log(`listening on port ${PORT}`);
