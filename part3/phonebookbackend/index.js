@@ -1,12 +1,16 @@
 const express = require('express');
-const morgan = require('morgan');
 const app = express();
+const morgan = require('morgan');
+const cors = require('cors');
 
+app.use(express.static('build')); //this middleware from express to make express show static content,the page index.html and javascript from build folder.
 app.use(express.json());
+app.use(cors());
 
 morgan.token('body', function (req) {
-	return (JSON.stringify(req.body));
-  })
+	return JSON.stringify(req.body);
+});
+
 app.use(
 	morgan(':method :url :status :res[content-length] - :response-time ms :body')
 );
@@ -33,6 +37,18 @@ let persons = [
 		number: '39-23-6423122',
 	},
 ];
+
+//implement a first page to instruct users to navigate the app.
+app.get('/', (request, response) => {
+	response.send(
+		`<div>
+			<p>Amend url to .../info to get overview of resources.</p>
+			<p>Amend url to .../api/persons to view all resources.</p>
+			<p>Amend url to .../api/persons/id to view the single resource with that id.</p>
+			<p>In addition, you can test adding a new resource and deleting a single one in Postman.</p>
+		</div>`
+	);
+});
 
 //fetch all resources in the "persons" collection
 app.get('/api/persons', (request, response) => {
@@ -77,7 +93,7 @@ const generateID = () => {
 
 app.post('/api/persons', (request, response) => {
 	const body = request.body;
-//	console.log(body);
+	//	console.log(body);
 
 	//prevent posting data if the name is missing
 	if (!body.name) {
@@ -104,6 +120,6 @@ app.post('/api/persons', (request, response) => {
 	response.json(persons);
 });
 
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;
 app.listen(PORT);
 console.log(`listening on port ${PORT}`);

@@ -1,4 +1,4 @@
-import { useState, setState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import personServices from './services/person';
 
 const SuccessNotification = ({ message }) => {

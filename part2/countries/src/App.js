@@ -5,20 +5,39 @@ import axios from 'axios';
 function App() {
 	//console.log('App');
 	const [countries, setCountries] = useState([]);
-	const [filter, setFilter] = useState([]);
+	const [filter, setFilter] = useState('');
 	const [matches, setMatches] = useState([]);
 
 	const len = countries.length; //number of countries in the database
 	const allContainers = document.querySelectorAll('.country-container');
 	const countryNames = document.querySelectorAll('.country-name');
 
-	//fetch data
-	const effectHandler = () => {
+	//get the weather information for the country's capital(s)
+	const getWeatherInfo = (city) => {
+		const weatherInfo = axios
+			.get(
+				`https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=${process.env.REACT_APP_API_KEY}`
+			)
+			.then((response) => {
+				console.log('response.data: ', response.data,typeof response.data)
+				return response.data;
+			});
+		return [
+			weatherInfo.data[0].temp,
+			weatherInfo.data[0].weather[0].icon,
+			weatherInfo.data[0].wind_speed,
+		];
+	};
+	const weatherInLondon = getWeatherInfo(London);
+	console.log('weather in london', weatherInLondon);
+
+	//fetch data of countries
+	const countryEffectHandler = () => {
 		axios.get('https://restcountries.com/v3.1/all').then((response) => {
 			setCountries(countries.concat(response.data));
 		});
 	};
-	useEffect(effectHandler, []);
+	useEffect(countryEffectHandler, []);
 	console.log('countries', countries);
 
 	//get name of all countries
@@ -46,6 +65,7 @@ function App() {
 			return ['no data to show'];
 		}
 	});
+
 	//official languages
 	const languages = countries.map((country) => {
 		if (country.languages !== undefined) {
@@ -88,9 +108,8 @@ function App() {
 	const handleSearch = () => {
 		//get the input value
 		const input = document.getElementById('search-input');
-		const inputValue = input.value;
-		setFilter(inputValue.toUpperCase());
-		console.log('search keys:', filter);
+		const inputValue = input.value.toUpperCase();
+		setFilter(inputValue);
 
 		//an array storing all indexes of matched countries
 		setMatches(
@@ -102,6 +121,7 @@ function App() {
 			}, [])
 		);
 		console.log('match indexes: ', matches);
+		console.log('filter:', filter);
 		const main = document.getElementById('main');
 
 		const p = document.createElement('p');
@@ -126,12 +146,12 @@ function App() {
 			textNode.textContent = 'Too many matches found';
 			p.style.display = 'block';
 		}
-	}
+	};
 
 	return (
 		<div id='main'>
 			<div>
-				<label for="search-input">Find countries{' '}</label>
+				<label for='search-input'>Find countries </label>
 				<input type='text' id='search-input' onKeyUp={handleSearch} />
 			</div>
 			{names.map((name, index) => (
@@ -162,6 +182,15 @@ function App() {
 							width='400'
 							height='300'
 						/>
+
+						{capitals[index].map((cap) => (
+							<div className='weather'>
+								<h2>Weather in {cap}</h2>
+								<p>Temperature</p>
+								<backgroundImage src='' />
+								<p>Wind </p>
+							</div>
+						))}
 					</div>
 				</div>
 			))}
