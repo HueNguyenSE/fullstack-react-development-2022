@@ -30,14 +30,14 @@ const ErrorNotification = ({ message }) => {
 		return null;
 	}
 	return <div style={errorStyle}>{message}</div>;
-}
+};
 
 function App() {
 	const [persons, setPersons] = useState([]);
 	const [newName, setNewName] = useState('');
 	const [newNumber, setNewNumber] = useState();
 	const [successMessage, setSuccessMessage] = useState(null);
-	const [errorMessage, setErrorMessage] = useState(null)
+	const [errorMessage, setErrorMessage] = useState(null);
 
 	//fetch the data from the database
 	useEffect(() => {
@@ -115,14 +115,23 @@ function App() {
 				name: newName,
 				number: newNumber,
 			};
-			personServices.add(personObj).then((returnedPerson) => {
-				setPersons(persons.concat(returnedPerson));
-			});
+			personServices
+				.add(personObj)
+				.then((returnedPerson) => {
+					setPersons(persons.concat(returnedPerson));
+					setSuccessMessage(`Added ${newName}`);
+					setTimeout(() => {
+						setSuccessMessage(null);
+					}, 5000);
+				})
+				.catch((error) => {
+					console.log(error.response.data.error);
+					setErrorMessage(error.response.data.error);
+					setTimeout(() => {
+						setErrorMessage(null);
+					}, 5000);
+				});
 			//show the success message which will disappear after 5s
-			setSuccessMessage(`Added ${newName}`);
-			setTimeout(() => {
-				setSuccessMessage(null);
-			}, 5000);
 		}
 		//finally, reset the input boxes
 		setNewName('');
@@ -138,12 +147,14 @@ function App() {
 				.del(person.id)
 				.then((returnedPerson) => {
 					setPersons(persons.filter((p) => p.id !== returnedPerson.id));
-					setSuccessMessage(`Contact for ${person.name} deleted`)
+					setSuccessMessage(`Contact for ${person.name} deleted`);
 					setTimeout(() => setSuccessMessage(null), 5000);
 				})
 				.catch((error) => {
-					setErrorMessage(`Information of ${person.name} has already been removed from server`);
-					setTimeout(() => setErrorMessage(null), 5000)
+					setErrorMessage(
+						`Information of ${person.name} has already been removed from server`
+					);
+					setTimeout(() => setErrorMessage(null), 5000);
 				});
 		}
 	};

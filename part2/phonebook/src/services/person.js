@@ -26,4 +26,6 @@ const update = (id, number) => {
 	return request.then((response) => response.data);
 };
 
+
+
 export default { getAll, add, del, update };
