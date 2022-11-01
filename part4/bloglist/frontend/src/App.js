@@ -9,24 +9,6 @@ const App = (props) => {
 	const [newUrl, setNewUrl] = useState('');
 	const [likes, setLikes] = useState(0);
 
-	const addNewBlog = (event) => {
-		event.preventDefault();
-		console.log('button click', event.target);
-		const blogObject = {
-			id: Math.random().toString(),
-			title: newTitle,
-			author: newAuthor,
-			url: newUrl,
-      likes: 0,
-		};
-    console.log(blogObject.likes)
-
-		setBlogs(blogs.concat(blogObject));
-		setNewTitle('');
-		setNewAuthor('');
-		setNewUrl('');
-	};
-
 	const handleTitleChange = (event) => {
 		console.log(event.target.value);
 		setNewTitle(event.target.value);
@@ -42,20 +24,49 @@ const App = (props) => {
 		setNewUrl(event.target.value);
 	};
 
+	const addNewBlog = (event) => {
+		event.preventDefault();
+		console.log('button click', event.target);
+		//check whether the url is already existing
+		const isExist = blogs.some(
+			(blog) => blog.url.toLowerCase() === newUrl.toLowerCase()
+		);
+
+		if (isExist) {
+			window.alert(`${newUrl} already exists`);
+      setNewUrl('');
+		} else {
+			const blogObject = {
+				id: Math.random().toString(),
+				title: newTitle,
+				author: newAuthor,
+				url: newUrl,
+				likes: 0,
+			};
+			console.log(blogObject.likes);
+
+			blogs.find((blog) => blog.url === blogObject.url);
+			setBlogs(blogs.concat(blogObject));
+			setNewTitle('');
+			setNewAuthor('');
+			setNewUrl('');
+		}
+	};
+
 	const addNewLike = (id) => {
-		const blog = blogs.find(blog => blog.id === id);
-    const numLikes = blog.likes++;
-    setLikes(numLikes)
-    console.log(blog.likes)
-    console.log('added like')
+		const blog = blogs.find((blog) => blog.id === id);
+		const numLikes = blog.likes++;
+		setLikes(numLikes);
+		console.log(blog.likes);
+		console.log('added like');
 	};
 
 	return (
-		<div>
-			<h1>Blog List</h1>
+		<div className='App'>
+			<h1>Save a blog</h1>
 			<form onSubmit={addNewBlog} id='blog'>
 				<div>
-					<label for='title'>Title</label>
+					<label htmlFor='title'>Title</label>
 					<input
 						type='text'
 						id='title'
@@ -66,7 +77,7 @@ const App = (props) => {
 					></input>
 				</div>
 				<div>
-					<label for='author'>Author</label>
+					<label htmlFor='author'>Author</label>
 					<input
 						type='text'
 						id='author'
@@ -76,7 +87,7 @@ const App = (props) => {
 					></input>
 				</div>
 				<div>
-					<label for='url'>URL</label>
+					<label htmlFor='url'>URL</label>
 					<input
 						type='text'
 						id='url'
@@ -89,10 +100,12 @@ const App = (props) => {
 
 				<button type='submit'>Save</button>
 			</form>
-
-			{blogs.map((blog) => (
-				<Blog blog={blog} addNewLike={() => addNewLike(blog.id)} />
-			))}
+			<div>
+				<h1>Blogs</h1>
+				{blogs.map((blog) => (
+					<Blog blog={blog} addNewLike={() => addNewLike(blog.id)} />
+				))}
+			</div>
 		</div>
 	);
 };
