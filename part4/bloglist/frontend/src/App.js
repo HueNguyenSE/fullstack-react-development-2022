@@ -1,24 +1,40 @@
 import React from 'react';
 import Blog from './components/Blog';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import blogService from './services/blogs';
 
-const App = (props) => {
-	const [blogs, setBlogs] = useState(props.blogs);
+const App = () => {
+	const [blogs, setBlogs] = useState([]);
 	const [newTitle, setNewTitle] = useState('');
 	const [newAuthor, setNewAuthor] = useState('');
 	const [newUrl, setNewUrl] = useState('');
-	const [likes, setLikes] = useState(0);
 
+	//fetch data fronm the server
+	const hook = () => {
+		console.log('effect');
+		blogService.getAll().then(initialBlogs => {
+			console.log('fulfilled');
+			setBlogs(initialBlogs);
+		}).catch(err => {
+			alert('failed to fetch data')
+		});
+	};
+	useEffect(hook, []);
+	console.log('render', blogs.length, 'blogs');
+
+	//get the input of the title
 	const handleTitleChange = (event) => {
 		console.log(event.target.value);
 		setNewTitle(event.target.value);
 	};
 
+	//get the input of the author
 	const handleAuthorChange = (event) => {
 		console.log(event.target.value);
 		setNewAuthor(event.target.value);
 	};
 
+	//get the input of the url
 	const handleUrlChange = (event) => {
 		console.log(event.target.value);
 		setNewUrl(event.target.value);
@@ -26,7 +42,7 @@ const App = (props) => {
 
 	const addNewBlog = (event) => {
 		event.preventDefault();
-		console.log('button click', event.target);
+		//console.log('button click', event.target);
 		//check whether the url is already existing
 		const isExist = blogs.some(
 			(blog) => blog.url.toLowerCase() === newUrl.toLowerCase()
@@ -34,10 +50,9 @@ const App = (props) => {
 
 		if (isExist) {
 			window.alert(`${newUrl} already exists`);
-      setNewUrl('');
+			setNewUrl('');
 		} else {
 			const blogObject = {
-				id: Math.random().toString(),
 				title: newTitle,
 				author: newAuthor,
 				url: newUrl,
@@ -45,20 +60,29 @@ const App = (props) => {
 			};
 			console.log(blogObject.likes);
 
-			blogs.find((blog) => blog.url === blogObject.url);
-			setBlogs(blogs.concat(blogObject));
-			setNewTitle('');
-			setNewAuthor('');
-			setNewUrl('');
+			blogService.create(blogObject).then(returnedBlog => {
+				//console.log(returnedBlogs);
+				setBlogs(blogs.concat(returnedBlog));
+				setNewTitle('');
+				setNewAuthor('');
+				setNewUrl('');
+			});
 		}
 	};
 
 	const addNewLike = (id) => {
 		const blog = blogs.find((blog) => blog.id === id);
-		const numLikes = blog.likes++;
-		setLikes(numLikes);
-		console.log(blog.likes);
-		console.log('added like');
+		blog.likes += 1;
+		// console.log(blog.likes)
+		// const changedBlog = { ...blog};
+		// console.log('changed blog', changedBlog)
+
+		blogService.update(id, blog).then(returnedBlog => {
+			setBlogs(blogs.map((b) => (b.id !== id ? b : returnedBlog)));
+			// console.log(response.data);
+			// console.log(blog.likes);
+			// console.log('added like');
+		});
 	};
 
 	return (
